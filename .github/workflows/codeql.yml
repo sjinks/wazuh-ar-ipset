@@ -20,6 +20,12 @@ jobs:
       actions: read
       contents: read
       security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - c-cpp
+          - actions
     name: CodeQL Scan
     runs-on: ubuntu-latest
     steps:
@@ -30,12 +36,20 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libipset-dev libcjson-dev
+        if: matrix.language == 'c-cpp'
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@cf1bb45a277cb3c205638b2cd5c984db1c46a412 # v4.31.7
+        with:
+          languages: ${{ matrix.language }}
 
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@cf1bb45a277cb3c205638b2cd5c984db1c46a412 # v4.31.7
+      - name: Build
+        run: |
+          cmake -B build
+          cmake --build build -j$(nproc)
+        if: matrix.language == 'c-cpp'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@cf1bb45a277cb3c205638b2cd5c984db1c46a412 # v4.31.7
+        with:
+          category: "/language:${{ matrix.language }}"
