@@ -6,6 +6,7 @@
 #include <libipset/session.h>
 #include <libipset/types.h>
 
+#include "utils.h"
 #include "wazuh.h"
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -16,7 +17,7 @@ static int standard_error(struct ipset* ipset, void* p)
     enum ipset_err_type err_type  = ipset_session_report_type(session);
 
     const char* msg = ipset_session_report_msg(session);
-    char* message   = msg != nullptr ? strdup(msg) : nullptr;
+    char* message   = msg != nullptr ? utils_strdup(msg) : nullptr;
     if (message != NULL) {
         size_t len = strlen(message);
         if (len > 0 && message[len - 1] == '\n') {

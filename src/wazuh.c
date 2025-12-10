@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #include "globals.h"
+#include "utils.h"
 
 static char* log_file_name = nullptr;
 
@@ -50,7 +51,7 @@ static char* wazuh_get_home_dir()
         return nullptr;
     }
 
-    return strdup(path);
+    return utils_strdup(path);
 }
 
 static char* get_wazuh_log_file()

@@ -1,6 +1,7 @@
 #include "utils.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -59,4 +60,15 @@ enum ar_command utils_parse_command(const char* command)
     }
 
     return AR_COMMAND_INVALID;
+}
+
+char* utils_strdup(const char* str)
+{
+    if (str == nullptr) {
+        return nullptr;
+    }
+
+    size_t len = strlen(str);
+    char* dup  = (char*)calloc(1, len + 1);
+    return dup != nullptr ? (char*)memcpy(dup, str, len) : nullptr;
 }
