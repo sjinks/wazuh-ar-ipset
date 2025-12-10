@@ -15,4 +15,6 @@ enum ar_command {
 [[gnu::nonnull(1)]] const char* utils_get_list_name(const struct cJSON* input, int family);
 [[gnu::nonnull(1)]] enum ar_command utils_parse_command(const char* command);
 
+[[nodiscard]] char* utils_strdup(const char* str);
+
 #endif /* E3DBFFEA_EAB7_41DB_BEA4_D4593BF9EA05 */
