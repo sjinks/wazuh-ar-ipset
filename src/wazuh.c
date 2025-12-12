@@ -14,7 +14,7 @@
 #include "globals.h"
 #include "utils.h"
 
-static char* log_file_name = nullptr;
+static char* log_file_name = NULL;
 
 static char* get_timestamp(time_t time, size_t buf_size, char (*buf)[buf_size])
 {
@@ -33,22 +33,22 @@ static char* get_timestamp(time_t time, size_t buf_size, char (*buf)[buf_size])
 static char* wazuh_get_home_dir()
 {
     const struct passwd* pw = getpwnam("wazuh");
-    char* path = nullptr;
-    if (pw != nullptr && pw->pw_dir != nullptr) {
+    char* path = NULL;
+    if (pw != NULL && pw->pw_dir != NULL) {
         path = pw->pw_dir;
     }
     else {
         path = getenv("WAZUH_HOME");
     }
 
-    if (path == nullptr || path[0] == '\0') {
+    if (path == NULL || path[0] == '\0') {
         path = "/var/ossec";
     }
 
     struct stat sb;
     int rc = stat(path, &sb);
     if (rc != 0 || !S_ISDIR(sb.st_mode)) {
-        return nullptr;
+        return NULL;
     }
 
     return utils_strdup(path);
@@ -57,14 +57,14 @@ static char* wazuh_get_home_dir()
 static char* get_wazuh_log_file()
 {
     char* home_dir = wazuh_get_home_dir();
-    if (home_dir == nullptr) {
-        return nullptr;
+    if (home_dir == NULL) {
+        return NULL;
     }
 
     char* log_path = calloc(1, PATH_MAX);
-    if (log_path == nullptr) {
+    if (log_path == NULL) {
         free(home_dir);
-        return nullptr;
+        return NULL;
     }
 
     snprintf(log_path, PATH_MAX, "%s/logs/active-responses.log", home_dir);
@@ -74,31 +74,31 @@ static char* get_wazuh_log_file()
 
 void wazuh_initialize()
 {
-    if (log_file_name == nullptr) {
+    if (log_file_name == NULL) {
         log_file_name = get_wazuh_log_file();
     }
 }
 
 void wazuh_finalize()
 {
-    if (log_file_name != nullptr) {
+    if (log_file_name != NULL) {
         free(log_file_name);
-        log_file_name = nullptr;
+        log_file_name = NULL;
     }
 }
 
 void wazuh_log_message(const char* format, ...)
 {
     char timestamp[sizeof("YYYY/MM/DD HH:MM:SS")];
-    const time_t now = time(nullptr);
+    const time_t now = time(NULL);
     get_timestamp(now, sizeof(timestamp), &timestamp);
 
-    FILE* f = nullptr;
-    if (log_file_name != nullptr) {
+    FILE* f = NULL;
+    if (log_file_name != NULL) {
         f = fopen(log_file_name, "a");
     }
 
-    FILE* stream = f != nullptr ? f : stderr;
+    FILE* stream = f != NULL ? f : stderr;
 
     fprintf(stream, "%s %s: ", timestamp, g_program_name);
 
@@ -111,7 +111,7 @@ void wazuh_log_message(const char* format, ...)
 
     fflush(stream);
 
-    if (f != nullptr) {
+    if (f != NULL) {
         fclose(f);
     }
 }

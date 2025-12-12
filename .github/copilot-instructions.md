@@ -54,7 +54,7 @@ When in doubt, **favor clarity and explicit error paths** over cleverness.
 Follow the existing style in `src/`.
 
 - **Language level**
-  - Use C23-compatible C. It is acceptable to use C2x features supported by modern GCC/Clang (e.g., attributes, `nullptr` where already present, designated initializers).
+  - Use C23-compatible C. It is acceptable to use C2x features supported by clang 11 and gcc 10 (e.g., attributes).
   - Do **not** introduce C++ features; this is C compiled as C, even if some files use C++-style attributes.
 - **Headers and modules**
   - Add new declarations to the most appropriate existing header: `utils.h`, `json.h`, `wazuh.h`, `ipset.h`, or create a new header if strictly needed.
