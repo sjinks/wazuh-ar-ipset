@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1
+# check=skip=CopyIgnoredFile
+
 FROM --platform=${BUILDPLATFORM} tonistiigi/xx:latest@sha256:c64defb9ed5a91eacb37f96ccc3d4cd72521c4bd18d5442905b95e2226b0e707 AS xx
 
 FROM --platform=${BUILDPLATFORM} alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS build-alpine
@@ -22,7 +25,7 @@ RUN \
     ${HOSTSPEC}-strip build/firewall-ipset && \
     install -D -m 0755 build/firewall-ipset /static/firewall-ipset
 
-FROM --platform=${BUILDPLATFORM} debian:oldoldstable-slim@sha256:96970ef0e5bd63fc63913c76ed0450bbb9f856146ec37b3ef2f0b96d4fe9dafc AS build-debian
+FROM --platform=${BUILDPLATFORM} debian:oldoldstable-slim@sha256:45382a2ad0eecdbc81af0fddf502a5e86c71bb05b5d38e2d054a39c13376ab75 AS build-debian
 ARG TARGETPLATFORM
 COPY --from=xx / /
 RUN \
