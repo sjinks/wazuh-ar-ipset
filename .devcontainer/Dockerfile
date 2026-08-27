@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/cpp:debian13@sha256:a5eb5a1e9109af88bf82ebb0f71903608a68144851ed1e4b852e31b251ac59c6
+FROM mcr.microsoft.com/devcontainers/cpp:debian13@sha256:fe57de20805248a5060fd46c71a79f36266369043f97c88adf949e1bc38308c4
 
 RUN \
     export DEBIAN_FRONTEND=noninteractive && \
