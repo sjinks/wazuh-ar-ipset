@@ -25,7 +25,7 @@ RUN \
     ${HOSTSPEC}-strip build/firewall-ipset && \
     install -D -m 0755 build/firewall-ipset /static/firewall-ipset
 
-FROM --platform=${BUILDPLATFORM} debian:oldoldstable-slim@sha256:45382a2ad0eecdbc81af0fddf502a5e86c71bb05b5d38e2d054a39c13376ab75 AS build-debian
+FROM --platform=${BUILDPLATFORM} debian:oldoldstable-slim@sha256:b0958b8ac56050a0412a9af89f017d56dbe569ef3ab221b5a8a9c9519957bae7 AS build-debian
 ARG TARGETPLATFORM
 COPY --from=xx / /
 RUN \
