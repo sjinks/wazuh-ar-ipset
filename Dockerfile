@@ -51,6 +51,7 @@ RUN \
     export XX_CC_PREFER_LINKER=ld && \
     export SYSROOT=$(xx-info sysroot) && \
     export HOSTSPEC=$(xx-info triple) && \
+    export PKG_CONFIG_LIBDIR="/usr/lib/${HOSTSPEC}/pkgconfig:/usr/share/pkgconfig" && \
     xx-clang --setup-target-triple && \
     cmake -S . -B build $(xx-clang --print-cmake-defines) -DCMAKE_BUILD_TYPE=MinSizeRel -DBUILD_STATIC=off && \
     cmake --build build -j 2 && \
