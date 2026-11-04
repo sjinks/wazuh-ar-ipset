@@ -11,6 +11,6 @@ target "default" {
   ]
 
   cache-to = [
-    "type=gha,mode=max"
+    "type=gha,mode=min"
   ]
 }
