@@ -25,7 +25,7 @@ RUN \
     ${HOSTSPEC}-strip build/firewall-ipset && \
     install -D -m 0755 build/firewall-ipset /static/firewall-ipset
 
-FROM --platform=${BUILDPLATFORM} debian:oldoldstable-slim@sha256:45382a2ad0eecdbc81af0fddf502a5e86c71bb05b5d38e2d054a39c13376ab75 AS build-debian
+FROM --platform=${BUILDPLATFORM} debian:bookworm-slim@sha256:99c0b25c46d0214d5a2091092e7908907dcaecd6a962cde0ac700acee222b6f3 AS build-debian
 ARG TARGETPLATFORM
 COPY --from=xx / /
 RUN \
@@ -47,7 +47,7 @@ COPY . .
 
 RUN \
     set -x && \
-    export ARCHITECTURE=$(xx-info alpine-arch) && \
+    export ARCHITECTURE=$(xx-info debian-arch) && \
     export XX_CC_PREFER_LINKER=ld && \
     export SYSROOT=$(xx-info sysroot) && \
     export HOSTSPEC=$(xx-info triple) && \
