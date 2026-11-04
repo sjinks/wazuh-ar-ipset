@@ -1,60 +1,72 @@
-name: Docker Build
+name: Docker Cache Benchmark
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build:
-    name: Build Docker image
+  cold:
+    name: Cold (${{ matrix.mode }})
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [min, max]
     steps:
-      - name: Check out the source code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Docker
-        uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5 # v5.6.0
-        with:
-          daemon-config: |
-            {
-              "features": {
-                "containerd-snapshotter": true
-              }
-            }
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
       - name: Build
-        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e # v7.5.0
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e
         with:
           source: .
           files: docker-bake.hcl
-          no-cache: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+          set: |
+            default.cache-from=type=gha,scope=benchmark-20261104-${{ matrix.mode }}
+            default.cache-to=type=gha,scope=benchmark-20261104-${{ matrix.mode }},mode=${{ matrix.mode }}
 
-      - name: Upload artirfacts (amd64)
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  warm:
+    name: Warm (${{ matrix.mode }})
+    needs: cold
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [min, max]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - name: Build
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e
         with:
-          name: amd64
-          path: out/linux_amd64
+          source: .
+          files: docker-bake.hcl
+          set: |
+            default.cache-from=type=gha,scope=benchmark-20261104-${{ matrix.mode }}
+            default.cache-to=type=gha,scope=benchmark-20261104-${{ matrix.mode }},mode=${{ matrix.mode }}
 
-      - name: Upload artirfacts (arm64)
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+  source_change:
+    name: Source change (${{ matrix.mode }})
+    needs: warm
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [min, max]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: docker/setup-docker-action@7ec28a010822b4626af4874f9448a4b05ac6f3e5
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069
+      - name: Change source
+        run: printf '\n/* Cache benchmark source change. */\n' >> src/main.c
+      - name: Build
+        uses: docker/bake-action@59cb1203cd42bcefd40a1b6d73b589e48c86040e
         with:
-          name: arm64
-          path: out/linux_arm64
+          source: .
+          files: docker-bake.hcl
+          set: |
+            default.cache-from=type=gha,scope=benchmark-20261104-${{ matrix.mode }}
+            default.cache-to=type=gha,scope=benchmark-20261104-${{ matrix.mode }},mode=${{ matrix.mode }}
