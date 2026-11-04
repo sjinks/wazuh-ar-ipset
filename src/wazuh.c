@@ -16,6 +16,78 @@
 
 static char* log_file_name = NULL;
 
+static size_t utf8_sequence_length(const unsigned char* p)
+{
+    if (*p >= 0xC2 && *p <= 0xDF) {
+        return p[1] >= 0x80 && p[1] <= 0xBF ? 2 : 0;
+    }
+
+    if (*p >= 0xE0 && *p <= 0xEF) {
+        if (p[1] < 0x80 || p[1] > 0xBF || (*p == 0xE0 && p[1] < 0xA0) || (*p == 0xED && p[1] > 0x9F)) {
+            return 0;
+        }
+
+        return p[2] >= 0x80 && p[2] <= 0xBF ? 3 : 0;
+    }
+
+    if (*p >= 0xF0 && *p <= 0xF4) {
+        if (p[1] < 0x80 || p[1] > 0xBF || (*p == 0xF0 && p[1] < 0x90) || (*p == 0xF4 && p[1] > 0x8F)) {
+            return 0;
+        }
+
+        if (p[2] < 0x80 || p[2] > 0xBF) {
+            return 0;
+        }
+
+        return p[3] >= 0x80 && p[3] <= 0xBF ? 4 : 0;
+    }
+
+    return 0;
+}
+
+static void write_log_text(FILE* stream, const char* text)
+{
+    const unsigned char* p = (const unsigned char*)text;
+    const unsigned char* run = p;
+
+    while (*p != '\0') {
+        size_t escaped = 0;
+        if (*p < 0x20 || *p == 0x7F) {
+            escaped = 1;
+        }
+        else if (*p == 0xC2 && p[1] >= 0x80 && p[1] <= 0x9F) {
+            escaped = 2;
+        }
+        else if (*p == 0xE2 && p[1] == 0x80 && (p[2] == 0xA8 || p[2] == 0xA9)) {
+            escaped = 3;
+        }
+        else if (*p >= 0x80) {
+            size_t length = utf8_sequence_length(p);
+            if (length != 0) {
+                p += length;
+                continue;
+            }
+
+            escaped = 1;
+        }
+
+        if (escaped == 0) {
+            ++p;
+        }
+        else {
+            fwrite(run, 1, (size_t)(p - run), stream);
+            for (size_t i = 0; i < escaped; ++i) {
+                fprintf(stream, "\\x%02X", (unsigned int)p[i]);
+            }
+
+            p  += escaped;
+            run = p;
+        }
+    }
+
+    fwrite(run, 1, (size_t)(p - run), stream);
+}
+
 static char* get_timestamp(time_t time, size_t buf_size, char (*buf)[buf_size])
 {
     struct tm* localtm = localtime(&time);
@@ -100,11 +172,25 @@ void wazuh_log_message(const char* format, ...)
 
     FILE* stream = f != NULL ? f : stderr;
 
-    fprintf(stream, "%s %s: ", timestamp, g_program_name);
+    fprintf(stream, "%s ", timestamp);
+    write_log_text(stream, g_program_name);
+    fputs(": ", stream);
 
     va_list args;
     va_start(args, format);
-    vfprintf(stream, format, args);
+    va_list copy;
+    va_copy(copy, args);
+    int length = vsnprintf(NULL, 0, format, copy);
+    va_end(copy);
+    char* message = length >= 0 ? malloc((size_t)length + 1) : NULL;
+    if (message != NULL) {
+        vsnprintf(message, (size_t)length + 1, format, args);
+        write_log_text(stream, message);
+        free(message);
+    }
+    else {
+        fputs("[log message unavailable]", stream);
+    }
     va_end(args);
 
     fputc('\n', stream);
