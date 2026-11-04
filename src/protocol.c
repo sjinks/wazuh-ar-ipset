@@ -55,6 +55,10 @@ void send_control_message(const char* srcip)
 
     // `keys` are deleted by `json_build_control_message()`
 
-    printf("%s\n", message);
+    int written = printf("%s\n", message);
     free(message);
+    if (written < 0 || fflush(stdout) == EOF) {
+        wazuh_log_message("Failed to send control message");
+        exit(OS_FAILURE);
+    }
 }
